@@ -28,3 +28,27 @@ def printSession():
 def printUserMsgs():
 
     return 0
+
+# Save a message that could not be sent due to closed or faulty connection
+def storeMsg():
+
+    return 0
+
+# Get all messages stored for a particular user and delete them from the database
+# Used for when messages are written to an unresponding host.
+def flushStoredMsgs():
+    msgs = []
+    return msgs, 0
+
+
+### TESTING FUNCTIONS ###
+
+# Delete an existing database to create a clean slate. Use only
+# for testing.
+def killAndCreateDB():
+    
+    return 0
+
+
+
+
