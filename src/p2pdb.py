@@ -1,10 +1,34 @@
 # Database module utilizing sqlite3 for the peer to peer client
 # Project
 import sqlite3
+import os
+import yaml
 
+# Get the name of the db from the config file
+def getDB():
+    try:
+        with open(os.abspath("src/config.yaml", "r")) as f:
+            config = yaml.load(f, Loader = yaml.FullLoader)
+            db = config["database"]
+            f.close()
+            return db, 0
+    except Exception as e:
+        print(e)
+        print("CRITICAL ERROR: The config file does not exist!")
+        return -1, -3
 
 # Initialize the database, if it hasn't been created already
 def createDB():
+    db, code = getDB()
+
+    if code == -3:
+        return -1
+
+    con = sqlite3.connect(db)
+    cur = con.cursor()
+
+    cur.execute("CREATE TABLE storedMsgs(name, timestamp, MAC, message)")
+    cur.execute("CREATE TABLE ")
 
     return 0
 
