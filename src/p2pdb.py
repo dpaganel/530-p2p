@@ -5,7 +5,6 @@ import os
 import yaml
 import time
 
-
 # Initialize the database, if it hasn't been created already
 def createDB():
     db, code = get_config()
