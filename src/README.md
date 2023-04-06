@@ -5,7 +5,7 @@ Due to the limited nature of UDP we are implementing our own headers,
 They are in this format:
 
 ```
-Sender Name|Recipient Name|Recipient IP|Sender MAC|Recipient MAC| Timestamp|Message Text
+Type|Recipient Name|Sender Name|Recipient IP|Sender IP|Recipient MAC|Sender MAC|Message I|Timestamp|Message Text
 ```
 
 Thus, the message can be split into its parts via the split("|") command.
