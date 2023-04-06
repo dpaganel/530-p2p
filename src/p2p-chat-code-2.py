@@ -24,10 +24,11 @@ def send():
         message = input("")
 
         # quit if the message is quit()
-        if message == "quit":
+        if message == "quit()":
+
             quit_message = "Other person has ended the chat"
             s.sendto(quit_message.encode(), (receiver_ip, receiver_port))
-            sys.exit("Quitting Chat")
+            os._exit(1)
 
         s.sendto(message.encode(), (receiver_ip, receiver_port))
         print(s)
