@@ -6,8 +6,8 @@ from p2pdb import *
 import uuid
 import components.UDP_packet as packet
 
-udp_packet = packet.UDP_packet("beans", "recipient", "sender", "recv_ip", "send_ip", "recv_MAC", "send_MAC", "message", "ack_status")
-print(udp_packet)
+# udp_packet = packet.UDP_packet("beans", "recipient", "sender", "recv_ip", "send_ip", "recv_MAC", "send_MAC", "message", "ack_status")
+# print(udp_packet)
 
 
 # send_ip = input("Your system's IP address: ")
@@ -27,9 +27,10 @@ s.bind((my_ip, my_port))
 
 # when this program runs, add a user to the database
 user_name = input("Enter your user name: ")
+my_MAC = hex(uuid.getnode())
 
 # make sure to set the active status to 1 because the user is on!
-create_user(user_name, my_ip, hex(uuid.getnode()), 1)
+create_user(user_name, my_ip, my_MAC, 1)
 
 # now we want to see who else is available
 
@@ -37,26 +38,31 @@ create_user(user_name, my_ip, hex(uuid.getnode()), 1)
 # define send functionality, encode message and send to receiving ip/port
 def send():
     while True:
-        message = input("")
+        message_text = input("")
+
+        # create a message object to be put in the database
+        # udp_packet = packet.UDP_packet("beans", "recipient", "sender", "recv_ip", "send_ip", "recv_MAC", "send_MAC", "message", "ack_status")
+# print(udp_packet)
+        udp_packet = packet.UDP_packet("message", "recipient", "user_name", receiver_ip, my_ip, "recv_MAC", my_MAC, message_text, 0)
+        save_msg(udp_packet)
 
         # quit if the message is quit()
-        if (message == "q" or message == "quit"):
+        if (message_text == "q" or message_text == "quit"):
             print("did you mean to use quit()?")
-        if message == "quit()":
+        if message_text == "quit()":
 
             quit_message = "Other person has left the chat"
             s.sendto(quit_message.encode(), (receiver_ip, receiver_port))
             update_user(hex(uuid.getnode()), 0, 'active')
             os._exit(1)
 
-        s.sendto(message.encode(), (receiver_ip, receiver_port))
+        s.sendto(message_text.encode(), (receiver_ip, receiver_port))
         print(s)
 
 # define receiving functionality, decode message and print to screen
 def recv():
     while True:
         message_recv = s.recvfrom(1024)
-        save_msg(message_recv, user_name)
         print("message received: " + message_recv[0].decode())
 
 # utilize threads to enable sending and receiving concurrently.

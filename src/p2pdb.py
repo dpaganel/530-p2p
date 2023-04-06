@@ -4,6 +4,7 @@ import sqlite3
 import os
 import yaml
 import time
+import components.UDP_packet as packet
 
 # constants that define message status
 SENT = 0
@@ -29,8 +30,8 @@ def createDB():
 
     cur = con.cursor()
 
-    cur.execute("CREATE TABLE user(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL , name TEXT , last_p TEXT , MAC TEXT, active INT )")
-    cur.execute("CREATE TABLE messages(id INTEGER PRIMARY KEY AUTOINCREMENT, sender TEXT, receiver TEXT, text TEXT, timestamp TEXT, status TEXT)")
+    cur.execute("CREATE TABLE user(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT , last_p TEXT , MAC TEXT, active INT )")
+    cur.execute("CREATE TABLE messages(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, type TEXT, recipient INT, sender INT, recv_ip TEXT, send_ip TEXT, recv_MAC TEXT, send_MAC TEXT, message TEXT, ack_status INT)")
 
     cur.close()
     con.close()
@@ -192,13 +193,8 @@ def update_user(user_MAC, new_data, column):
 # custom headers and splits in function. See the README
 # for message formatting.
 # Return 0 on success
-def save_msg(msg_text, current_user):
-    msg_array = msg_text.split("|")
+def save_msg(udp_packet):
 
-    # check if message is of correct form
-    if len(msg_array) != MSG_BLOCKS:
-        return -4
-    
     db, code = get_config()
     if code < 0:
         return -3 # config does not exist
@@ -219,13 +215,14 @@ def save_msg(msg_text, current_user):
         return -2 # fail to connect to db    
     
     # discard msg type
-    if msg_array[RECIPIENT_NAME_INDEX] == current_user:
-        data = msg_array[1::] + ACKED
-    else:
-        data = msg_array[1::] + SENT
+    print(udp_packet.getMessage())
+    data = (None, str(udp_packet.getType()), str(udp_packet.getRecipient()), str(udp_packet.getSender()), str(udp_packet.getRecv_ip()), str(udp_packet.getSend_ip()), str(udp_packet.getRecv_MAC()), str(udp_packet.getSend_MAC()), str(udp_packet.getMessage()), str(udp_packet.getAck_status()))
+    try:
+        cur.execute("INSERT INTO messages VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", data)
+        con.commit()
 
-    cur.execute('''INSERT INTO messages VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', data)
-    con.commit()
+    except Exception as e:
+        print(e)
 
     cur.close()
     con.close()

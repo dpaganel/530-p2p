@@ -11,41 +11,41 @@ class UDP_packet:
         self.recv_MAC = recv_MAC
         self.send_MAC = send_MAC
         self.message = message
-        self.ack = ack_status
+        self.ack_status = ack_status
     
     def setType(self, type):
         self.type = type
     def getType(self):
-        return self.type
+        return (self.type)
     def setRecipient(self, recipient):
         self.recipient = recipient
     def getRecipient(self):
-        return self.recipient
+        return (self.recipient)
     def setSender(self, sender):
         self.sender = sender
     def getSender(self):
-        return self.sender
+        return (self.sender)
     def setRecv_ip(self, recv_ip):
         self.recv_ip = recv_ip
     def getRecv_ip(self):
-        return self.recv_ip
+        return (self.recv_ip)
     def setSend_ip(self, send_ip):
         self.recv_ip = send_ip
     def getSend_ip(self):
-        return self.send_ip
+        return (self.send_ip)
     def setRecv_MAC(self, recv_MAC):
         self.recv_MAC = recv_MAC
     def getRecv_MAC(self):
-        return self.recv_MAC
+        return (self.recv_MAC)
     def setSend_MAC(self, send_MAC):
         self.send_MAC = send_MAC
     def getSend_MAC(self):
-        return self.send_MAC
+        return (self.send_MAC)
     def setMessage(self, message):
         self.message = message
     def getMessage(self):
-        return self.message
+        return (self.message)
     def setAck_status(self, ack_status):
         self.ack_status = ack_status
     def getAck_status(self):
-        return self.ack_status
+        return (self.ack_status)
