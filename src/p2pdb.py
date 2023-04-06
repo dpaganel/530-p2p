@@ -168,9 +168,14 @@ def update_user(user_MAC, new_data, column):
         return -2 # fail to connect to db
 
     if (column == 'name'):
-        cur.execute("UPDATE user SET name =(?) WHERE MAC=(?)", new_data)
+        cur.execute("UPDATE user SET name =(?) WHERE MAC=(?)", (new_data, user_MAC))
+        con.commit()
+    elif (column == 'active'):
+        cur.execute("UPDATE user SET active =(?) WHERE MAC=(?)", (new_data, user_MAC))
+        con.commit()
     elif (column == 'last_ip'):
-        cur.execute("UPDATE user SET last_ip =(?) WHERE MAC=(?)", new_data)
+        cur.execute("UPDATE user SET last_ip =(?) WHERE MAC=(?)", (new_data, user_MAC))
+        con.commit()
     else:
         return -4 # improper column request
 

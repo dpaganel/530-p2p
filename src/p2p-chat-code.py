@@ -25,8 +25,10 @@ s.bind((my_ip, my_port))
 user_name = input("Enter your user name: ")
 
 # make sure to set the active status to 1 because the user is on!
-t3 = threading.Thread(target=create_user, args=(user_name, my_ip, hex(uuid.getnode()), 1))
-t3.start()
+create_user(user_name, my_ip, hex(uuid.getnode()), 1)
+
+# now we want to see who else is available
+
 
 # define send functionality, encode message and send to receiving ip/port
 def send():
@@ -38,6 +40,7 @@ def send():
 
             quit_message = "Other person has left the chat"
             s.sendto(quit_message.encode(), (receiver_ip, receiver_port))
+            update_user(hex(uuid.getnode()), 0, 'active')
             os._exit(1)
 
         s.sendto(message.encode(), (receiver_ip, receiver_port))

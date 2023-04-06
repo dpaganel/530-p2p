@@ -37,6 +37,7 @@ def send():
 
             quit_message = "Other person has left the chat"
             s.sendto(quit_message.encode(), (receiver_ip, receiver_port))
+            
             os._exit(1)
 
         s.sendto(message.encode(), (receiver_ip, receiver_port))
