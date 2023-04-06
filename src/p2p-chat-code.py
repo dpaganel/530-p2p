@@ -18,6 +18,11 @@ receiver_port = 4444
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.bind((my_ip, my_port))
 
+# when this program runs, add a user to the database
+user_name = input("Enter your user name: ")
+t3 = threading.Thread(target=create_user, args=(user_name, my_ip, hex(uuid.getnode())))
+t3.start()
+
 # define send functionality, encode message and send to receiving ip/port
 def send():
     while True:
