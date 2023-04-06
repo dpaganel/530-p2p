@@ -33,6 +33,7 @@ def createDB():
 
     cur.close()
     con.close()
+    print("all the way here")
     return 0
 
 def get_config():
@@ -41,6 +42,7 @@ def get_config():
         with open(os.path.abspath("config.yaml"), 'r') as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
             db = config["database"]
+            print(db)
             f.close()
             return db, 0
     except Exception as e:
@@ -48,8 +50,6 @@ def get_config():
         print("CRITICAL ERROR: The config file does not exist!")
         return -1, -3
 
-    finally:
-        return -1, -4
 
 # create a user for storage. Also usable to remember remote users.
 # returns 0 on success
@@ -360,5 +360,4 @@ def killAndCreateDB():
     return 0
 
 
-
-
+createDB()

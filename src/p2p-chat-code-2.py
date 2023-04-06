@@ -9,10 +9,10 @@ import sys
 # recv_port = int(input("recv port: "))
 
 # hard coded right now, could get input from user or system though! ^^
-my_ip = '192.168.4.30'
-my_port = 2222
 receiver_ip = '192.168.56.1'
 receiver_port = 4444
+my_ip = '192.168.4.30'
+my_port = 2222
 
 # bind port to socket on current platform
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -24,11 +24,10 @@ def send():
         message = input("")
 
         # quit if the message is quit()
-        if message == "quit()":
-
+        if message == "quit":
             quit_message = "Other person has ended the chat"
             s.sendto(quit_message.encode(), (receiver_ip, receiver_port))
-            os._exit(1)
+            sys.exit("Quitting Chat")
 
         s.sendto(message.encode(), (receiver_ip, receiver_port))
         print(s)
