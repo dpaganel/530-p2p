@@ -28,12 +28,11 @@ def createDB():
 
     cur = con.cursor()
 
-    cur.execute("CREATE TABLE user(id, name, last_p, MAC)")
-    cur.execute("CREATE TABLE messages(id, sender, receiver, text, timestamp, status)")
+    cur.execute("CREATE TABLE user(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL , name TEXT , last_p TEXT , MAC TEXT, active INT )")
+    cur.execute("CREATE TABLE messages(id INTEGER PRIMARY KEY AUTOINCREMENT, sender TEXT, receiver TEXT, text TEXT, timestamp TEXT, status TEXT)")
 
     cur.close()
     con.close()
-    print("all the way here")
     return 0
 
 def get_config():
@@ -53,7 +52,7 @@ def get_config():
 
 # create a user for storage. Also usable to remember remote users.
 # returns 0 on success
-def create_user(user_name, user_ip, user_MAC):
+def create_user(user_name, user_ip, user_MAC, active):
     db, code = get_config()
     if code < 0:
         return -3 # config does not exist
@@ -74,7 +73,9 @@ def create_user(user_name, user_ip, user_MAC):
         return -2 # fail to connect to db
 
     data = (user_name, user_ip, user_MAC)
-    cur.execute("INSERT INTO user VALUES(?, ?, ?)", data)
+    cur.execute("INSERT INTO user VALUES(?, ?, ?, ?, ?)", (None, user_name, user_ip, user_MAC, active))
+
+    con.commit()
 
     cur.close()
     con.close()
@@ -358,6 +359,3 @@ def killAndCreateDB():
     cur.close()
     con.close()
     return 0
-
-
-createDB()
