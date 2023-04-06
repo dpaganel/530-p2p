@@ -3,6 +3,7 @@
             # Type|Recipient Name|Sender Name|Recipient IP|Sender IP|Recipient MAC|Sender MAC|Message I|Timestamp|Message Text
 class UDP_packet:
     def __init__(self, type, recipient, sender, recv_ip, send_ip, recv_MAC, send_MAC, message, ack_status):
+        self.id = 0
         self.type = type
         self.recipient = recipient
         self.sender = sender
@@ -13,6 +14,10 @@ class UDP_packet:
         self.message = message
         self.ack_status = ack_status
     
+    def setId(self, id):
+        self.id = id
+    def getId(self):
+        return self.id
     def setType(self, type):
         self.type = type
     def getType(self):

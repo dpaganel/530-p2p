@@ -43,7 +43,6 @@ def get_config():
         with open(os.path.abspath("config.yaml"), 'r') as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
             db = config["database"]
-            print(db)
             f.close()
             return db, 0
     except Exception as e:
@@ -215,11 +214,11 @@ def save_msg(udp_packet):
         return -2 # fail to connect to db    
     
     # discard msg type
-    print(udp_packet.getMessage())
     data = (None, str(udp_packet.getType()), str(udp_packet.getRecipient()), str(udp_packet.getSender()), str(udp_packet.getRecv_ip()), str(udp_packet.getSend_ip()), str(udp_packet.getRecv_MAC()), str(udp_packet.getSend_MAC()), str(udp_packet.getMessage()), str(udp_packet.getAck_status()))
     try:
         cur.execute("INSERT INTO messages VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", data)
         con.commit()
+        return cur.lastrowid
 
     except Exception as e:
         print(e)
@@ -332,7 +331,7 @@ def update_status(msg_id):
     
     data = (1, msg_id)
 
-    cur.execute("UPDATE conversation SET status =(?) WHERE id=(?)", data)
+    cur.execute("UPDATE messages SET ack_status =(?) WHERE id=(?)", data)
     con.commit()
 
     cur.close()
