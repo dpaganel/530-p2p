@@ -28,9 +28,9 @@ def createDB():
 
     cur = con.cursor()
 
-    cur.execute("CREATE TABLE user(name, last_ip, MAC)")
-    cur.execute('''CREATE TABLE conversations(receiver, sender, recv_addr, sender_addr,
-                    to_MAC, from_MAC, id, timestamp, text, status)''')
+    cur.execute("CREATE TABLE user(id, name, last_p, MAC)")
+    cur.execute("CREATE TABLE messages(id, sender, receiver, text, timestamp, status)")
+
     cur.close()
     con.close()
     return 0
@@ -354,7 +354,6 @@ def killAndCreateDB():
 
     cur.execute("CREATE TABLE user(name, last_p, MAC)")
     cur.execute("CREATE TABLE messages(sender, receiver, text, timestamp)")
-    cur.execute("CREATE TABLE buffer(receiver, target_ip, text, timestamp)")
 
     cur.close()
     con.close()
