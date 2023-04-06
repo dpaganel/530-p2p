@@ -4,6 +4,10 @@ import threading
 import sys
 from p2pdb import *
 import uuid
+import components.UDP_packet as packet
+
+udp_packet = packet.UDP_packet("beans", "recipient", "sender", "recv_ip", "send_ip", "recv_MAC", "send_MAC", "message", "ack_status")
+print(udp_packet)
 
 
 # send_ip = input("Your system's IP address: ")
@@ -36,6 +40,8 @@ def send():
         message = input("")
 
         # quit if the message is quit()
+        if (message == "q" or message == "quit"):
+            print("did you mean to use quit()?")
         if message == "quit()":
 
             quit_message = "Other person has left the chat"
@@ -50,6 +56,7 @@ def send():
 def recv():
     while True:
         message_recv = s.recvfrom(1024)
+        save_msg(message_recv, user_name)
         print("message received: " + message_recv[0].decode())
 
 # utilize threads to enable sending and receiving concurrently.

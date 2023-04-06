@@ -30,6 +30,10 @@ t3.start()
 # define send functionality, encode message and send to receiving ip/port
 def send():
     while True:
+
+        # format of a message package
+        # Type|Recipient Name|Sender Name|Recipient IP|Sender IP|Recipient MAC|Sender MAC|Message I|Timestamp|Message Text
+
         message = input("")
 
         # quit if the message is quit()
@@ -37,7 +41,6 @@ def send():
 
             quit_message = "Other person has left the chat"
             s.sendto(quit_message.encode(), (receiver_ip, receiver_port))
-            
             os._exit(1)
 
         s.sendto(message.encode(), (receiver_ip, receiver_port))

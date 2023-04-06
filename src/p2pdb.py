@@ -12,6 +12,7 @@ ACKED = 0
 # into component parts
 MSG_BLOCKS = 10
 RECIPIENT_NAME_INDEX = 1
+    
 
 # Initialize the database, if it hasn't been created already
 def createDB():
@@ -223,7 +224,7 @@ def save_msg(msg_text, current_user):
     else:
         data = msg_array[1::] + SENT
 
-    cur.execute('''INSERT INTO conversations VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', data)
+    cur.execute('''INSERT INTO messages VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', data)
     con.commit()
 
     cur.close()
