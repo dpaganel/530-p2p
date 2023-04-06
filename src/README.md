@@ -1,21 +1,17 @@
 # Message Format
 
-Due to the limited nature of UDP we are implementing our own headers,
+Due to the limited nature of UDP we are implementing our own packet format to be sent. This has been implemented as a UDP_package class that has the following schema:
 
-They are in this format:
-
-```
-Type|Recipient Name|Sender Name|Recipient IP|Sender IP|Recipient MAC|Sender MAC|Message I|Timestamp|Message Text
-```
-
-Thus, the message can be split into its parts via the split("|") command.
-
-This has now been changed to a UDP_package class that has the following schema:
-
-class UDP_packet:
-    def __init__(self, type, recipient, sender, recv_ip, send_ip, recv_MAC, send_MAC, message, ack_status):
+UDP_packet:
+- id
+- type
+- recipient id
+- sender id
+- message text
+- ack status
 
 where ack_status can have one of two values: 0 (sent), 1 (received)
+
 
 
 # Database Schema

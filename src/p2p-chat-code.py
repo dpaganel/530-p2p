@@ -8,7 +8,6 @@ import uuid
 import components.UDP_packet as packet
 
 # udp_packet = packet.UDP_packet("beans", "recipient", "sender", "recv_ip", "send_ip", "recv_MAC", "send_MAC", "message", "ack_status")
-# print(udp_packet)
 
 
 # send_ip = input("Your system's IP address: ")
@@ -20,7 +19,7 @@ import components.UDP_packet as packet
 my_ip = '192.168.56.1'
 my_port = 4444
 receiver_ip = '192.168.56.1'
-receiver_port = 4444
+receiver_port = 2222
 
 # bind port to socket on current platform
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -44,7 +43,7 @@ def send():
         # create a message object to be put in the database
         # udp_packet = packet.UDP_packet("beans", "recipient", "sender", "recv_ip", "send_ip", "recv_MAC", "send_MAC", "message", "ack_status")
 # print(udp_packet)
-        udp_packet = packet.UDP_packet("message", "recipient", "user_name", receiver_ip, my_ip, "recv_MAC", my_MAC, message_text, 0)
+        udp_packet = packet.UDP_packet("message", "recipient", user_name, message_text, 0)
         message_id = save_msg(udp_packet)
         udp_packet.setId(message_id)
 
@@ -64,11 +63,15 @@ def send():
 # define receiving functionality, decode message and print to screen
 def recv():
     while True:
-        udp_packet = pickle.loads(s.recv(1024))
-
+        try:
+            udp_packet = pickle.loads(s.recv(1024))
+            print("message received: " + udp_packet.getMessage())
+            update_status(udp_packet.getId())
+        except Exception as e:
+            # the recipient is not reachable.
+            print("The message could not be delivered at this time, we will try again later.")
         # go to the database and change the ack on the message to 1
-        print("message received: " + udp_packet.getMessage())
-        update_status(udp_packet.getId())
+
 
 # utilize threads to enable sending and receiving concurrently.
 t1 = threading.Thread(target=send)

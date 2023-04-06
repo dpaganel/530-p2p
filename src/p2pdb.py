@@ -31,7 +31,7 @@ def createDB():
     cur = con.cursor()
 
     cur.execute("CREATE TABLE user(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT , last_p TEXT , MAC TEXT, active INT )")
-    cur.execute("CREATE TABLE messages(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, type TEXT, recipient INT, sender INT, recv_ip TEXT, send_ip TEXT, recv_MAC TEXT, send_MAC TEXT, message TEXT, ack_status INT)")
+    cur.execute("CREATE TABLE messages(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, type TEXT, recipient INT, sender INT, message TEXT, ack_status INT)")
 
     cur.close()
     con.close()
@@ -214,9 +214,9 @@ def save_msg(udp_packet):
         return -2 # fail to connect to db    
     
     # discard msg type
-    data = (None, str(udp_packet.getType()), str(udp_packet.getRecipient()), str(udp_packet.getSender()), str(udp_packet.getRecv_ip()), str(udp_packet.getSend_ip()), str(udp_packet.getRecv_MAC()), str(udp_packet.getSend_MAC()), str(udp_packet.getMessage()), str(udp_packet.getAck_status()))
+    data = (None, str(udp_packet.getType()), str(udp_packet.getRecipient()), str(udp_packet.getSender()), str(udp_packet.getMessage()), str(udp_packet.getAck_status()))
     try:
-        cur.execute("INSERT INTO messages VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", data)
+        cur.execute("INSERT INTO messages VALUES(?, ?, ?, ?, ?, ?)", data)
         con.commit()
         return cur.lastrowid
 
