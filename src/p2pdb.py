@@ -30,7 +30,7 @@ def createDB():
 
     cur = con.cursor()
 
-    cur.execute("CREATE TABLE user(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT, last_ip TEXT, MAC TEXT, active INT)")
+    cur.execute("CREATE TABLE user(name, last_ip, MAC, active)")
     cur.execute("CREATE TABLE messages(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, type TEXT, recipient TEXT, sender TEXT, message TEXT, ack_status INT)")
 
     cur.close()
@@ -73,8 +73,8 @@ def create_user(user_name, user_ip, user_MAC, active):
         print(e)
         return -2 # fail to connect to db
 
-    data = (user_name, user_ip, user_MAC)
-    cur.execute("INSERT INTO user VALUES(?, ?, ?, ?, ?)", (None, user_name, user_ip, user_MAC, active),)
+    data = (str(user_name), str(user_ip), str(user_MAC))
+    cur.execute("INSERT INTO user VALUES(?, ?, ?, ?)", (user_name, user_ip, user_MAC, int(active)),)
 
     con.commit()
 
@@ -170,8 +170,8 @@ def get_known_users(self_MAC):
         print(e)
         return -1, -2 # fail to connect to db
     
-    res = cur.execute("SELECT * FROM user WHERE MAC!=(?)", (self_MAC))
-    res = res.fetchall
+    res = cur.execute("SELECT * FROM user WHERE MAC!=(?)", (self_MAC,))
+    res = res.fetchall()
 
     cur.close()
     con.close()
@@ -289,19 +289,19 @@ def get_all_unsent(user_spec, spec_type='name'):
     data = (user_spec, 0)
 
     if (spec_type == 'name'):
-        res = cur.execute("SELECT * FROM conversations WHERE reciever=(?) AND status=(?)", data)
+        res = cur.execute("SELECT * FROM conversations WHERE reciever=(?) AND ack_status=(?)", data)
         res = res.fetchall()
 
     elif (spec_type == 'MAC'):
-        res = cur.execute("SELECT * FROM conversations WHERE to_MAC=(?) AND status=(?)", data)
-        res = res.fetchall()
+        res = cur.execute("SELECT * FROM conversations WHERE to_MAC=(?) AND ack_status=(?)", data)
+        users = res.fetchall()
     else:
         return -1, -4
     
     cur.close()
     con.close()
 
-    return res, 0
+    return users, 0
 
 # Get all messages to and from a user - a full conversation
 # data_types: 'name' or 'MAC' and denotes whether the targeted
@@ -386,13 +386,6 @@ def killAndCreateDB():
         
     if(os.path.exists(os.path.abspath(db)) == True):
         os.remove(db)
-    con = sqlite3.connect(db)
+    createDB()
 
-    cur = con.cursor()
-
-    cur.execute("CREATE TABLE user(name, last_p, MAC)")
-    cur.execute("CREATE TABLE messages(sender, receiver, text, timestamp)")
-
-    cur.close()
-    con.close()
     return 0
