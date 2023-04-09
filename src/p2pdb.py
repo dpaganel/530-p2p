@@ -4,6 +4,7 @@ import sqlite3
 import os
 import yaml
 import time
+import components.UDP_packet as packet
 
 # constants that define message status
 SENT = 0
@@ -12,6 +13,7 @@ ACKED = 0
 # into component parts
 MSG_BLOCKS = 10
 RECIPIENT_NAME_INDEX = 1
+    
 
 # Initialize the database, if it hasn't been created already
 def createDB():
@@ -28,12 +30,11 @@ def createDB():
 
     cur = con.cursor()
 
-    cur.execute("CREATE TABLE user(id, name, last_p, MAC)")
-    cur.execute("CREATE TABLE messages(id, sender, receiver, text, timestamp, status)")
+    cur.execute("CREATE TABLE user(name, last_ip, MAC, active)")
+    cur.execute("CREATE TABLE messages(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, type TEXT, recipient TEXT, sender TEXT, message TEXT, ack_status INT)")
 
     cur.close()
     con.close()
-    print("all the way here")
     return 0
 
 def get_config():
@@ -42,7 +43,6 @@ def get_config():
         with open(os.path.abspath("config.yaml"), 'r') as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
             db = config["database"]
-            print(db)
             f.close()
             return db, 0
     except Exception as e:
@@ -53,7 +53,7 @@ def get_config():
 
 # create a user for storage. Also usable to remember remote users.
 # returns 0 on success
-def create_user(user_name, user_ip, user_MAC):
+def create_user(user_name, user_ip, user_MAC, active):
     db, code = get_config()
     if code < 0:
         return -3 # config does not exist
@@ -73,8 +73,10 @@ def create_user(user_name, user_ip, user_MAC):
         print(e)
         return -2 # fail to connect to db
 
-    data = (user_name, user_ip, user_MAC)
-    cur.execute("INSERT INTO user VALUES(?, ?, ?)", data)
+    data = (str(user_name), str(user_ip), str(user_MAC))
+    cur.execute("INSERT INTO user VALUES(?, ?, ?, ?)", (user_name, user_ip, user_MAC, int(active)),)
+
+    con.commit()
 
     cur.close()
     con.close()
@@ -144,6 +146,41 @@ def get_user_by_MAC(MAC):
     else:
         return -1, -5
 
+# return all known users who are not us - this is used to ping
+# all known contacts in order to try and get an update on what messages
+# they have.
+# returns a list of users in tuple form
+def get_known_users(self_MAC):
+    db, code = get_config()
+    if code < 0:
+        return -1, -3 # config does not exist
+    
+    try:
+        if(os.path.exists(os.path.abspath(db)) == False):
+            print(db, " does not exist.")
+            return -1
+    except Exception as e:
+        print(e)
+        return -1, -1 #db does not exist
+
+    try:
+        con = sqlite3.connect(db)
+        cur = con.cursor()
+    except Exception as e:
+        print(e)
+        return -1, -2 # fail to connect to db
+    
+    res = cur.execute("SELECT * FROM user WHERE MAC!=(?)", (self_MAC,))
+    res = res.fetchall()
+
+    cur.close()
+    con.close()
+    
+    if res is not None:
+        return res, 0
+    else:
+        return -1, -5
+
 # Update the specific value of a specific user given
 # desired values and the MAC address of the user
 def update_user(user_MAC, new_data, column):
@@ -167,9 +204,14 @@ def update_user(user_MAC, new_data, column):
         return -2 # fail to connect to db
 
     if (column == 'name'):
-        cur.execute("UPDATE user SET name =(?) WHERE MAC=(?)", new_data)
+        cur.execute("UPDATE user SET name =(?) WHERE MAC=(?)", (new_data, user_MAC))
+        con.commit()
+    elif (column == 'active'):
+        cur.execute("UPDATE user SET active =(?) WHERE MAC=(?)", (new_data, user_MAC))
+        con.commit()
     elif (column == 'last_ip'):
-        cur.execute("UPDATE user SET last_ip =(?) WHERE MAC=(?)", new_data)
+        cur.execute("UPDATE user SET last_ip =(?) WHERE MAC=(?)", (new_data, user_MAC))
+        con.commit()
     else:
         return -4 # improper column request
 
@@ -185,13 +227,8 @@ def update_user(user_MAC, new_data, column):
 # custom headers and splits in function. See the README
 # for message formatting.
 # Return 0 on success
-def save_msg(msg_text, current_user):
-    msg_array = msg_text.split("|")
+def save_msg(udp_packet):
 
-    # check if message is of correct form
-    if len(msg_array) != MSG_BLOCKS:
-        return -4
-    
     db, code = get_config()
     if code < 0:
         return -3 # config does not exist
@@ -212,13 +249,14 @@ def save_msg(msg_text, current_user):
         return -2 # fail to connect to db    
     
     # discard msg type
-    if msg_array[RECIPIENT_NAME_INDEX] == current_user:
-        data = msg_array[1::] + ACKED
-    else:
-        data = msg_array[1::] + SENT
+    data = (None, str(udp_packet.getType()), str(udp_packet.getRecipient()), str(udp_packet.getSender()), str(udp_packet.getMessage()), str(udp_packet.getAck_status()))
+    try:
+        cur.execute("INSERT INTO messages VALUES(?, ?, ?, ?, ?, ?)", data)
+        con.commit()
+        return cur.lastrowid
 
-    cur.execute('''INSERT INTO conversations VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', data)
-    con.commit()
+    except Exception as e:
+        print(e)
 
     cur.close()
     con.close()
@@ -251,19 +289,19 @@ def get_all_unsent(user_spec, spec_type='name'):
     data = (user_spec, 0)
 
     if (spec_type == 'name'):
-        res = cur.execute("SELECT * FROM conversations WHERE reciever=(?) AND status=(?)", data)
+        res = cur.execute("SELECT * FROM conversations WHERE reciever=(?) AND ack_status=(?)", data)
         res = res.fetchall()
 
     elif (spec_type == 'MAC'):
-        res = cur.execute("SELECT * FROM conversations WHERE to_MAC=(?) AND status=(?)", data)
-        res = res.fetchall()
+        res = cur.execute("SELECT * FROM conversations WHERE to_MAC=(?) AND ack_status=(?)", data)
+        users = res.fetchall()
     else:
         return -1, -4
     
     cur.close()
     con.close()
 
-    return res, 0
+    return users, 0
 
 # Get all messages to and from a user - a full conversation
 # data_types: 'name' or 'MAC' and denotes whether the targeted
@@ -328,7 +366,7 @@ def update_status(msg_id):
     
     data = (1, msg_id)
 
-    cur.execute("UPDATE conversation SET status =(?) WHERE id=(?)", data)
+    cur.execute("UPDATE messages SET ack_status =(?) WHERE id=(?)", data)
     con.commit()
 
     cur.close()
@@ -342,22 +380,12 @@ def update_status(msg_id):
 # Delete an existing database to create a clean slate. Use only
 # for testing.
 def killAndCreateDB():
-    code, db = get_config()
+    db, code = get_config()
     if code < 0:
         return code, -1
         
     if(os.path.exists(os.path.abspath(db)) == True):
         os.remove(db)
-    con = sqlite3.connect(db)
+    createDB()
 
-    cur = con.cursor()
-
-    cur.execute("CREATE TABLE user(name, last_p, MAC)")
-    cur.execute("CREATE TABLE messages(sender, receiver, text, timestamp)")
-
-    cur.close()
-    con.close()
     return 0
-
-
-createDB()
