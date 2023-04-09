@@ -30,8 +30,8 @@ def createDB():
 
     cur = con.cursor()
 
-    cur.execute("CREATE TABLE user(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT , last_p TEXT , MAC TEXT, active INT )")
-    cur.execute("CREATE TABLE messages(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, type TEXT, recipient INT, sender INT, message TEXT, ack_status INT)")
+    cur.execute("CREATE TABLE user(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT, last_ip TEXT, MAC TEXT, active INT)")
+    cur.execute("CREATE TABLE messages(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, type TEXT, recipient TEXT, sender TEXT, message TEXT, ack_status INT)")
 
     cur.close()
     con.close()
@@ -74,7 +74,7 @@ def create_user(user_name, user_ip, user_MAC, active):
         return -2 # fail to connect to db
 
     data = (user_name, user_ip, user_MAC)
-    cur.execute("INSERT INTO user VALUES(?, ?, ?, ?, ?)", (None, user_name, user_ip, user_MAC, active))
+    cur.execute("INSERT INTO user VALUES(?, ?, ?, ?, ?)", (None, user_name, user_ip, user_MAC, active),)
 
     con.commit()
 
@@ -141,6 +141,41 @@ def get_user_by_MAC(MAC):
     res = res.fetchone()
     cur.close()
     con.close()
+    if res is not None:
+        return res, 0
+    else:
+        return -1, -5
+
+# return all known users who are not us - this is used to ping
+# all known contacts in order to try and get an update on what messages
+# they have.
+# returns a list of users in tuple form
+def get_known_users(self_MAC):
+    db, code = get_config()
+    if code < 0:
+        return -1, -3 # config does not exist
+    
+    try:
+        if(os.path.exists(os.path.abspath(db)) == False):
+            print(db, " does not exist.")
+            return -1
+    except Exception as e:
+        print(e)
+        return -1, -1 #db does not exist
+
+    try:
+        con = sqlite3.connect(db)
+        cur = con.cursor()
+    except Exception as e:
+        print(e)
+        return -1, -2 # fail to connect to db
+    
+    res = cur.execute("SELECT * FROM user WHERE MAC!=(?)", (self_MAC))
+    res = res.fetchall
+
+    cur.close()
+    con.close()
+    
     if res is not None:
         return res, 0
     else:
@@ -345,7 +380,7 @@ def update_status(msg_id):
 # Delete an existing database to create a clean slate. Use only
 # for testing.
 def killAndCreateDB():
-    code, db = get_config()
+    db, code = get_config()
     if code < 0:
         return code, -1
         
